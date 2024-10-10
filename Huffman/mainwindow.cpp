@@ -154,6 +154,31 @@ void MainWindow::encodeClicked() {
         stringEncoding.append(charEncoding[(unsigned char) data[index]]);
     }
 
+    // Working unencoded write to file:
+    // QString outName = QFileDialog::getSaveFileName(this, "Save");
+    // if (outName.isEmpty()) return;
+
+    // QFile outFile(outName);
+
+    // if (!outFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    //     QMessageBox::information(this, "Error", QString("Can't write to file \"%1\"").arg(outName));
+    //     return;
+    // }
+
+    // QDataStream out(&outFile);
+
+    // out << stringEncoding;
+    // out << charEncoding;
+
+    int nBits = stringEncoding.length();
+
+    QByteArray bytes = *new QByteArray((nBits + 1)/8,0);
+
+    bool ok;
+    for (int i = 0; i < nBits; i+=8) {
+        bytes[i/8] = stringEncoding.mid(i, 8).toInt(&ok, 2);
+    }
+
     QString outName = QFileDialog::getSaveFileName(this, "Save");
     if (outName.isEmpty()) return;
 
@@ -166,7 +191,8 @@ void MainWindow::encodeClicked() {
 
     QDataStream out(&outFile);
 
-    out << stringEncoding;
+    out << nBits;
+    out << bytes;
     out << charEncoding;
 }
 
@@ -179,46 +205,56 @@ void MainWindow::decodeClicked() {
 
     QDataStream in(&inFile);
 
-    QString encoding;
+    int nBits;
+    QByteArray bytes;
     QVector<QString> charEncoding;
 
-    in >> encoding;
+    in >> nBits;
+    in >> bytes;
     in >> charEncoding;
 
-    for (int index = 0; index < 256; ++index) {\
-        if (charEncoding[index] == "") continue;
 
-        QTableWidgetItem *item = new QTableWidgetItem();
-        item->setData(Qt::DisplayRole,index);
-        table->setItem(index,0,item);
+    // Working unencoded read from file:
+    // QString encoding;
+    // QVector<QString> charEncoding;
 
-        QTableWidgetItem *item2 = new QTableWidgetItem();
-        item2->setData(Qt::DisplayRole,QByteArray(1,index));
-        table->setItem(index,1,item2);
+    // in >> encoding;
+    // in >> charEncoding;
 
-        QTableWidgetItem *item3 = new QTableWidgetItem();
-        item3->setData(Qt::DisplayRole,charEncoding[index]);
-        table->setItem(index,3,item3);
+    // for (int index = 0; index < 256; ++index) {\
+    //     if (charEncoding[index] == "") continue;
 
-        table->showRow(index);
-    }
+    //     QTableWidgetItem *item = new QTableWidgetItem();
+    //     item->setData(Qt::DisplayRole,index);
+    //     table->setItem(index,0,item);
 
-    table->horizontalHeader()->show();
+    //     QTableWidgetItem *item2 = new QTableWidgetItem();
+    //     item2->setData(Qt::DisplayRole,QByteArray(1,index));
+    //     table->setItem(index,1,item2);
 
-    QString outName = QFileDialog::getSaveFileName(this, "Save");
-    if (outName.isEmpty()) return;
+    //     QTableWidgetItem *item3 = new QTableWidgetItem();
+    //     item3->setData(Qt::DisplayRole,charEncoding[index]);
+    //     table->setItem(index,3,item3);
 
-    QFile outFile(outName);
+    //     table->showRow(index);
+    // }
 
-    if (!outFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        QMessageBox::information(this, "Error", QString("Can't write to file \"%1\"").arg(outName));
-        return;
-    }
+    // table->horizontalHeader()->show();
 
-    QDataStream out(&outFile);
+    // QString outName = QFileDialog::getSaveFileName(this, "Save");
+    // if (outName.isEmpty()) return;
 
-    out << encoding;
-    out << charEncoding;
+    // QFile outFile(outName);
+
+    // if (!outFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+    //     QMessageBox::information(this, "Error", QString("Can't write to file \"%1\"").arg(outName));
+    //     return;
+    // }
+
+    // QDataStream out(&outFile);
+
+    // out << encoding;
+    // out << charEncoding;
 }
 
 MainWindow::~MainWindow() {}
