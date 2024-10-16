@@ -2,6 +2,7 @@
 
 #include <QtWidgets>
 
+#include "imageviewer.h"
 #include "colorhistogram.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -33,8 +34,12 @@ void MainWindow::openFileSlot() {
 
     lastDir = QFileInfo(fName).absolutePath();
 
+    // ImageViewer *imageViewer = new ImageViewer(image);
+    // connect(imageViewer, &ImageViewer::mouseMoved, this, &MainWindow::mouseMoved);
+
+    // setCentralWidget(imageViewer);
+
     ColorHistogram *colorHistogram = new ColorHistogram(image);
-    connect(colorHistogram, &ColorHistogram::mouseMoved, this, &MainWindow::mouseMoved);
 
     setCentralWidget(colorHistogram);
 }

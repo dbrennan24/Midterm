@@ -10,11 +10,13 @@ CONFIG += c++17
 
 SOURCES += \
     colorhistogram.cpp \
+    imageviewer.cpp \
     main.cpp \
     mainwindow.cpp
 
 HEADERS += \
     colorhistogram.h \
+    imageviewer.h \
     mainwindow.h
 
 # Default rules for deployment.
