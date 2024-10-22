@@ -31,7 +31,10 @@ void Scribbler::mousePressEvent(QMouseEvent *evt) {
     lastPoint = p;
     scene.addEllipse(QRectF(p - QPointF(0.5*lineWidth, 0.5*lineWidth), QSizeF(lineWidth, lineWidth)), Qt::NoPen, Qt::black);
 
-    events << MouseEvent(MouseEvent::Press, p, evt->timestamp());
+    if (events.isEmpty()) {
+        firstTimeStamp = evt->timestamp();
+    }
+    events << MouseEvent(MouseEvent::Press, p, evt->timestamp() - firstTimeStamp);
 }
 
 void Scribbler::mouseMoveEvent(QMouseEvent *evt) {
@@ -65,4 +68,20 @@ void Scribbler::showAllDrawing() {
 
 void Scribbler::showDotsOnly() {
     dotsOnly = true;
+}
+
+void Scribbler::sendData() {
+    if (events.isEmpty()) return;
+
+    emit dataSent(events[0]);
+
+    events.clear();
+}
+
+void Scribbler::resetScribbler() {
+    events.clear();
+
+    scene.clear();
+
+    emit clearScribbler();
 }

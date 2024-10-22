@@ -33,12 +33,20 @@ class Scribbler : public QGraphicsView
 
     bool dotsOnly;
 
+    quint64 firstTimeStamp;
+
 public:
     Scribbler();
+
+signals:
+    void dataSent(MouseEvent event);
+    void clearScribbler();
 
 public slots:
     void showAllDrawing();
     void showDotsOnly();
+    void sendData();
+    void resetScribbler();
 
 protected:
     void mouseMoveEvent(QMouseEvent *evt) override;

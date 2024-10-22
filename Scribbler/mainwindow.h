@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QGraphicsScene>
 
+#include "scribbler.h"
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -22,12 +24,14 @@ class MainWindow : public QMainWindow
     QAction *lineSegments;
     QAction *dotsOnly;
 
+    QList<MouseEvent> storedEvents;
+
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
-signals:
-    void showAllDrawing();
-    void showDotsOnly();
+ public slots:
+     void dataSent(MouseEvent event);
+     void clearData();
 };
 #endif // MAINWINDOW_H
