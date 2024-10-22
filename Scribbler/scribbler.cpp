@@ -5,6 +5,8 @@
 MouseEvent::MouseEvent(int _action, QPointF _pos, quint64 _time)
     :action(_action),pos(_pos),time(_time) {}
 
+MouseEvent::MouseEvent() {}
+
 QDataStream &operator<<(QDataStream &out, const MouseEvent &evt) {
     return out << evt.action << evt.pos << evt.time;
 }
@@ -12,7 +14,6 @@ QDataStream &operator<<(QDataStream &out, const MouseEvent &evt) {
 QDataStream &operator>>(QDataStream &in, MouseEvent &evt) {
     return in >> evt.action >> evt.pos >> evt.time;
 }
-
 
 Scribbler::Scribbler():lineWidth(4.0),dotsOnly(false) {
     setScene(&scene);
@@ -51,7 +52,7 @@ void Scribbler::mouseMoveEvent(QMouseEvent *evt) {
 
     lastPoint = p;
 
-    events << MouseEvent(MouseEvent::Move, p, evt->timestamp());
+    events << MouseEvent(MouseEvent::Move, p, evt->timestamp() - firstTimeStamp);
 }
 
 void Scribbler::mouseReleaseEvent(QMouseEvent *evt) {
@@ -59,7 +60,7 @@ void Scribbler::mouseReleaseEvent(QMouseEvent *evt) {
 
     QPointF p = mapToScene(evt->pos());
 
-    events << MouseEvent(MouseEvent::Release, p, evt->timestamp());
+    events << MouseEvent(MouseEvent::Release, p, evt->timestamp() - firstTimeStamp);
 }
 
 void Scribbler::showAllDrawing() {
@@ -73,7 +74,7 @@ void Scribbler::showDotsOnly() {
 void Scribbler::sendData() {
     if (events.isEmpty()) return;
 
-    emit dataSent(events[0]);
+    emit dataSent(events);
 
     events.clear();
 }

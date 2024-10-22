@@ -16,6 +16,7 @@ public:
     quint64 time;
 
     MouseEvent(int _action, QPointF _pos, quint64 _time);
+    MouseEvent();
 
     friend QDataStream &operator<<(QDataStream &out, const MouseEvent &evt);
     friend QDataStream &operator>>(QDataStream &out, MouseEvent &evt);
@@ -39,7 +40,7 @@ public:
     Scribbler();
 
 signals:
-    void dataSent(MouseEvent event);
+    void dataSent(QList<MouseEvent> eventList);
     void clearScribbler();
 
 public slots:

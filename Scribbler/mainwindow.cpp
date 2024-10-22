@@ -27,8 +27,12 @@ MainWindow::MainWindow(QWidget *parent)
 
     openFile = new QAction("Open file");
     openFile->setShortcut(Qt::CTRL | Qt::Key_O);
+    connect(openFile, &QAction::triggered, scribbler, &Scribbler::resetScribbler);
+    connect(openFile, &QAction::triggered, this, &MainWindow::openFileSlot);
+
     save = new QAction("Save");
     save->setShortcut(Qt::CTRL | Qt::Key_S);
+    connect(save, &QAction::triggered, this, &MainWindow::saveData);
 
     startCapture = new QAction("Start capture");
     startCapture->setShortcut(Qt::CTRL | Qt::Key_C);
@@ -65,35 +69,36 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() {}
 
-void MainWindow::dataSent(MouseEvent event) {
-
-    storedEvents.append(event);
+void MainWindow::dataSent(QList<MouseEvent> eventList) {
+    storedEvents.append(eventList);
 
     QTableWidget *table = new QTableWidget();
-    table->setRowCount(1);
+    table->setRowCount(eventList.length());
     table->setColumnCount(3);
     table->setHorizontalHeaderLabels({"Action","Position","Time"});
     table->verticalHeader()->hide();
 
-    QTableWidgetItem *item = new QTableWidgetItem();
-    if (event.action == 0) {
-        item->setData(Qt::DisplayRole, "Press");
-    }
-    else if (event.action == 1) {
-        item->setData(Qt::DisplayRole, "Move");
-    }
-    else  {
-        item->setData(Qt::DisplayRole, "Release");
-    }
-    table->setItem(0,0,item);
+    for (int index = 0; index < eventList.length(); ++index) {
+        QTableWidgetItem *item = new QTableWidgetItem();
+        if (eventList[index].action == 0) {
+            item->setData(Qt::DisplayRole, "Press");
+        }
+        else if (eventList[index].action == 1) {
+            item->setData(Qt::DisplayRole, "Move");
+        }
+        else  {
+            item->setData(Qt::DisplayRole, "Release");
+        }
+        table->setItem(index,0,item);
 
-    QTableWidgetItem *item2 = new QTableWidgetItem();
-    item2->setData(Qt::DisplayRole, QString("(%1,%2)").arg(event.pos.x()).arg(event.pos.y()));
-    table->setItem(0,1,item2);
+        QTableWidgetItem *item2 = new QTableWidgetItem();
+        item2->setData(Qt::DisplayRole, QString("(%1,%2)").arg(eventList[index].pos.x()).arg(eventList[index].pos.y()));
+        table->setItem(index,1,item2);
 
-    QTableWidgetItem *item3 = new QTableWidgetItem();
-    item3->setData(Qt::DisplayRole, event.time);
-    table->setItem(0,2,item3);
+        QTableWidgetItem *item3 = new QTableWidgetItem();
+        item3->setData(Qt::DisplayRole, eventList[index].time);
+        table->setItem(index,2,item3);
+    }
 
     tab->addTab(table,QString::number(storedEvents.length(),10));
     tab->show();
@@ -105,10 +110,67 @@ void MainWindow::clearData() {
     tab->hide();
 }
 
+void MainWindow::saveData() {
+    QString outName = QFileDialog::getSaveFileName(this, "Save");
+    if (outName.isEmpty()) return;
 
+    QFile outFile(outName);
 
+    if (!outFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        QMessageBox::information(this, "Error", QString("Can't write to file \"%1\"").arg(outName));
+        return;
+    }
 
+    QDataStream out(&outFile);
 
+    out << storedEvents;
+}
 
+void MainWindow::openFileSlot() {
+    QString inName = QFileDialog::getOpenFileName(this, "Open file");
 
+    QFile inFile(inName);
 
+    inFile.open(QIODevice::ReadOnly);
+
+    QDataStream in(&inFile);
+
+    QList<QList<MouseEvent>> savedEvents;
+
+    in >> savedEvents;
+
+    for (int listIndex = 0; listIndex < savedEvents.length(); ++listIndex) {
+        QTableWidget *table = new QTableWidget();
+        table->setRowCount(savedEvents[listIndex].length());
+        table->setColumnCount(3);
+        table->setHorizontalHeaderLabels({"Action","Position","Time"});
+        table->verticalHeader()->hide();
+
+        for (int index = 0; index < savedEvents[listIndex].length(); ++index) {
+            QTableWidgetItem *item = new QTableWidgetItem();
+            if (savedEvents[listIndex][index].action == 0) {
+                item->setData(Qt::DisplayRole, "Press");
+            }
+            else if (savedEvents[listIndex][index].action == 1) {
+                item->setData(Qt::DisplayRole, "Move");
+            }
+            else  {
+                item->setData(Qt::DisplayRole, "Release");
+            }
+            table->setItem(index,0,item);
+
+            QTableWidgetItem *item2 = new QTableWidgetItem();
+            item2->setData(Qt::DisplayRole, QString("(%1,%2)").arg(savedEvents[listIndex][index].pos.x()).arg(savedEvents[listIndex][index].pos.y()));
+            table->setItem(index,1,item2);
+
+            QTableWidgetItem *item3 = new QTableWidgetItem();
+            item3->setData(Qt::DisplayRole, savedEvents[listIndex][index].time);
+            table->setItem(index,2,item3);
+        }
+
+        tab->addTab(table,QString::number(listIndex + 1,10));
+        tab->show();
+
+        storedEvents.append(savedEvents[listIndex]);
+    }
+}

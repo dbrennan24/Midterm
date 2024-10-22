@@ -24,14 +24,16 @@ class MainWindow : public QMainWindow
     QAction *lineSegments;
     QAction *dotsOnly;
 
-    QList<MouseEvent> storedEvents;
+    QList<QList<MouseEvent>> storedEvents;
 
 public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
  public slots:
-     void dataSent(MouseEvent event);
-     void clearData();
+    void dataSent(QList<MouseEvent> eventList);
+    void clearData();
+    void saveData();
+    void openFileSlot();
 };
 #endif // MAINWINDOW_H
