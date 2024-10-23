@@ -44,10 +44,11 @@ signals:
     void clearScribbler();
 
 public slots:
-    void showAllDrawing();
-    void showDotsOnly();
+    void showAllDrawing(QList<QList<MouseEvent>> savedEvents);
+    void showDotsOnly(QList<QList<MouseEvent>> savedEvents);
     void sendData();
     void resetScribbler();
+    void redrawScribbler(QList<QList<MouseEvent>> loadedEvents);
 
 protected:
     void mouseMoveEvent(QMouseEvent *evt) override;

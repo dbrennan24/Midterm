@@ -36,18 +36,22 @@ MainWindow::MainWindow(QWidget *parent)
 
     startCapture = new QAction("Start capture");
     startCapture->setShortcut(Qt::CTRL | Qt::Key_C);
+    connect(startCapture, &QAction::triggered, this, &MainWindow::startCaptureSlot);
 
     endCapture = new QAction("End capture");
+    endCapture->setDisabled(true);
     endCapture->setShortcut(Qt::CTRL | Qt::Key_E);
     connect(endCapture, &QAction::triggered, scribbler, &Scribbler::sendData);
 
     lineSegments = new QAction("Line segments");
     lineSegments->setShortcut(Qt::CTRL | Qt::Key_L);
-    connect(lineSegments, &QAction::triggered, scribbler, &Scribbler::showAllDrawing);
+    connect(lineSegments, &QAction::triggered, this, &MainWindow::convertToLines);
+    connect(this, &MainWindow::lineSignal, scribbler, &Scribbler::showAllDrawing);
 
     dotsOnly = new QAction("Dots only");
     dotsOnly->setShortcut(Qt::CTRL | Qt::Key_D);
-    connect(dotsOnly, &QAction::triggered, scribbler, &Scribbler::showDotsOnly);
+    connect(dotsOnly, &QAction::triggered, this, &MainWindow::convertToDots);
+    connect(this, &MainWindow::dotSignal, scribbler, &Scribbler::showDotsOnly);
 
     fileMenu = menuBar()->addMenu("File");
     fileMenu->addAction(resetScribble);
@@ -65,9 +69,25 @@ MainWindow::MainWindow(QWidget *parent)
     connect(scribbler, &Scribbler::dataSent, this, &MainWindow::dataSent);
 
     connect(scribbler, &Scribbler::clearScribbler, this, &MainWindow::clearData);
+
+    connect(this, &MainWindow::redrawScribbler, scribbler, &Scribbler::redrawScribbler);
+
+    QSettings settings("DB", "Midterm");
+    lastDir = settings.value("lastDir", "").toString();
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow() {
+    QSettings settings("DB", "Midterm");
+    settings.setValue("lastDir", lastDir);
+}
+
+void MainWindow::convertToLines() {
+    emit lineSignal(storedEvents);
+}
+
+void MainWindow::convertToDots() {
+    emit dotSignal(storedEvents);
+}
 
 void MainWindow::dataSent(QList<MouseEvent> eventList) {
     storedEvents.append(eventList);
@@ -114,6 +134,8 @@ void MainWindow::saveData() {
     QString outName = QFileDialog::getSaveFileName(this, "Save");
     if (outName.isEmpty()) return;
 
+    lastDir = QFileInfo(outName).absolutePath();
+
     QFile outFile(outName);
 
     if (!outFile.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -128,6 +150,8 @@ void MainWindow::saveData() {
 
 void MainWindow::openFileSlot() {
     QString inName = QFileDialog::getOpenFileName(this, "Open file");
+
+    lastDir = QFileInfo(inName).absolutePath();
 
     QFile inFile(inName);
 
@@ -173,4 +197,10 @@ void MainWindow::openFileSlot() {
 
         storedEvents.append(savedEvents[listIndex]);
     }
+
+    emit redrawScribbler(savedEvents);
+}
+
+void MainWindow::startCaptureSlot() {
+    endCapture->setDisabled(false);
 }

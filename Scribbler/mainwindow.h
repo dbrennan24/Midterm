@@ -10,6 +10,8 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    QString lastDir;
+
     QTabWidget *tab;
 
     QMenu *fileMenu;
@@ -30,10 +32,18 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+signals:
+    void lineSignal(QList<QList<MouseEvent>>);
+    void dotSignal(QList<QList<MouseEvent>>);
+    void redrawScribbler(QList<QList<MouseEvent>>);
+
  public slots:
+    void convertToLines();
+    void convertToDots();
     void dataSent(QList<MouseEvent> eventList);
     void clearData();
     void saveData();
     void openFileSlot();
+    void startCaptureSlot();
 };
 #endif // MAINWINDOW_H
